@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Autumn Tree Scene - A-Frame</title>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script>
+      AFRAME.registerComponent('falling-leaf', {
+        init: function() {
+          const leaf = this.el;
+          const startY = 8;
+          const startX = (Math.random() * 4) - 2;
+          const startZ = (Math.random() * 4) - 2;
+
+          leaf.setAttribute('position', `${startX} ${startY} ${startZ}`);
+
+          // Fall animation
+          leaf.setAttribute('animation__fall', {
+            property: 'position',
+            to: `${startX + (Math.random() * 2 - 1)} 0 ${startZ + (Math.random() * 2 - 1)}`,
+            dur: 5000 + (Math.random() * 2000),
+            easing: 'linear',
+            loop: true
+          });
+
+          // Rotation animation
+          leaf.setAttribute('animation__rotate', {
+            property: 'rotation',
+            to: '360 360 360',
+            dur: 3000,
+            easing: 'linear',
+            loop: true
+          });
+        }
+      });
+
+      // Component to create multiple leaves
+      AFRAME.registerComponent('create-leaves', {
+        init: function() {
+          const colors = ['#daa520', '#d2691e', '#cd853f', '#ffa500', '#8b4513'];
+          const numLeaves = 20;
+
+          for (let i = 0; i < numLeaves; i++) {
+            const leaf = document.createElement('a-entity');
+            leaf.setAttribute('geometry', {
+              primitive: 'plane',
+              width: 0.2,
+              height: 0.2
+            });
+            leaf.setAttribute('material', {
+              color: colors[Math.floor(Math.random() * colors.length)],
+              side: 'double',
+              transparent: true,
+              opacity: 0.8
+            });
+            leaf.setAttribute('falling-leaf', '');
+            this.el.appendChild(leaf);
+          }
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <a-scene>
+      <!-- Environment -->
+      <a-sky color="#87CEEB"></a-sky>
+
+      <a-plane position="0 0 0"
+               rotation="-90 0 0"
+               width="50"
+               height="50"
+               color="#3a7e4f"
+               shadow="receive: true"
+               material="roughness: 1"></a-plane>
+
+      <!-- Lighting -->
+      <a-light type="ambient" color="#ffffff" intensity="0.5"></a-light>
+      <a-light type="directional"
+               position="1 1 1"
+               intensity="0.8"
+               color="#ffffff"
+               shadow="cast: true"></a-light>
+
+      <!-- Tree Structure -->
+      <a-entity id="tree" position="0 0 0">
+        <!-- Trunk -->
+        <a-cylinder position="0 2 0"
+                   radius="0.5"
+                   height="4"
+                   color="#5c4033"
+                   shadow="cast: true"
+                   material="roughness: 0.8"></a-cylinder>
+
+        <!-- Main Branches -->
+        <a-entity id="branches" position="0 4 0">
+          <a-cone position="0 2 0"
+                  radius-bottom="3"
+                  radius-top="0.5"
+                  height="4"
+                  segments-radial="6"
+                  color="#3d2616"
+                  shadow="cast: true"></a-cone>
+        </a-entity>
+
+        <!-- Foliage -->
+        <a-entity id="foliage">
+          <a-sphere position="0 6 0"
+                    radius="3.2"
+                    segments-width="10"
+                    segments-height="10"
+                    color="#daa520"
+                    material="opacity: 0.9; roughness: 1"
+                    shadow="cast: true"></a-sphere>
+
+          <a-sphere position="1 6.5 0"
+                    radius="2.8"
+                    segments-width="10"
+                    segments-height="10"
+                    color="#ffa500"
+                    material="opacity: 0.85; roughness: 1"
+                    shadow="cast: true"></a-sphere>
+
+          <a-sphere position="-0.5 5.8 0.5"
+                    radius="2.5"
+                    segments-width="10"
+                    segments-height="10"
+                    color="#8b4513"
+                    material="opacity: 0.8; roughness: 1"
+                    shadow="cast: true"></a-sphere>
+        </a-entity>
+
+        <!-- Falling Leaves -->
+        <a-entity id="leaves" create-leaves></a-entity>
+      </a-entity>
+
+      <!-- Camera -->
+      <a-entity position="0 2 12">
+        <a-camera look-controls wasd-controls></a-camera>
+      </a-entity>
+    </a-scene>
+  </body>
+</html>
