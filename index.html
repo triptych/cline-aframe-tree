@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Autumn Tree Scene - A-Frame</title>
+    <title>Autumn Forest Scene - A-Frame</title>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script>
       AFRAME.registerComponent('falling-leaf', {
@@ -11,12 +11,17 @@
           const startX = (Math.random() * 4) - 2;
           const startZ = (Math.random() * 4) - 2;
 
-          leaf.setAttribute('position', `${startX} ${startY} ${startZ}`);
+          // Get the tree's position
+          const treePosition = this.el.parentElement.parentElement.getAttribute('position');
+          const finalX = startX + treePosition.x;
+          const finalZ = startZ + treePosition.z;
+
+          leaf.setAttribute('position', `${finalX} ${startY} ${finalZ}`);
 
           // Fall animation
           leaf.setAttribute('animation__fall', {
             property: 'position',
-            to: `${startX + (Math.random() * 2 - 1)} 0 ${startZ + (Math.random() * 2 - 1)}`,
+            to: `${finalX + (Math.random() * 2 - 1)} 0 ${finalZ + (Math.random() * 2 - 1)}`,
             dur: 5000 + (Math.random() * 2000),
             easing: 'linear',
             loop: true
@@ -37,7 +42,7 @@
       AFRAME.registerComponent('create-leaves', {
         init: function() {
           const colors = ['#daa520', '#d2691e', '#cd853f', '#ffa500', '#8b4513'];
-          const numLeaves = 20;
+          const numLeaves = 12;
 
           for (let i = 0; i < numLeaves; i++) {
             const leaf = document.createElement('a-entity');
@@ -57,6 +62,124 @@
           }
         }
       });
+
+      // Component to create ground patches
+      AFRAME.registerComponent('create-ground', {
+        init: function() {
+          const groundColors = ['#3a7e4f', '#2d5a3a', '#447749'];
+          const numPatches = 50;
+
+          for (let i = 0; i < numPatches; i++) {
+            const patch = document.createElement('a-circle');
+            const x = (Math.random() * 140) - 70;
+            const z = (Math.random() * 140) - 70;
+            const radius = 3 + Math.random() * 5;
+
+            patch.setAttribute('position', `${x} 0.01 ${z}`);
+            patch.setAttribute('rotation', '-90 0 0');
+            patch.setAttribute('radius', radius);
+            patch.setAttribute('color', groundColors[Math.floor(Math.random() * groundColors.length)]);
+            patch.setAttribute('material', 'roughness: 1');
+
+            this.el.appendChild(patch);
+          }
+        }
+      });
+
+      // Component to create a forest
+      AFRAME.registerComponent('create-forest', {
+        init: function() {
+          // Create a grid of possible positions
+          const positions = [];
+          for (let x = -30; x <= 30; x += 10) {
+            for (let z = -30; z <= 30; z += 10) {
+              // Add some randomness to grid positions
+              const randX = x + (Math.random() * 6 - 3);
+              const randZ = z + (Math.random() * 6 - 3);
+              positions.push({x: randX, z: randZ});
+            }
+          }
+
+          const autumnColors = [
+            ['#daa520', '#ffa500', '#8b4513'],
+            ['#d2691e', '#cd853f', '#8b0000'],
+            ['#ffa500', '#ff8c00', '#cd853f'],
+            ['#ff4500', '#ff6347', '#cd853f'],
+            ['#d2691e', '#ff8c00', '#8b4513']
+          ];
+
+          positions.forEach((pos) => {
+            const tree = document.createElement('a-entity');
+            const baseScale = 0.7 + Math.random() * 0.6;
+            const heightScale = baseScale * (0.9 + Math.random() * 0.2);
+            const widthScale = baseScale * (0.9 + Math.random() * 0.2);
+
+            // Add slight random rotation for more natural look
+            const rotation = `0 ${Math.random() * 360} ${(Math.random() * 4) - 2}`;
+
+            tree.setAttribute('position', `${pos.x} 0 ${pos.z}`);
+            tree.setAttribute('scale', `${widthScale} ${heightScale} ${widthScale}`);
+            tree.setAttribute('rotation', rotation);
+
+            const colorSet = autumnColors[Math.floor(Math.random() * autumnColors.length)];
+            const trunkColor = ['#5c4033', '#8b4513', '#654321'][Math.floor(Math.random() * 3)];
+
+            // Create tree structure
+            tree.innerHTML = `
+              <!-- Trunk -->
+              <a-cylinder position="0 2 0"
+                         radius="0.5"
+                         height="4"
+                         color="${trunkColor}"
+                         shadow="cast: true"
+                         material="roughness: 0.8"></a-cylinder>
+
+              <!-- Main Branches -->
+              <a-entity position="0 4 0">
+                <a-cone position="0 2 0"
+                        radius-bottom="3"
+                        radius-top="0.5"
+                        height="4"
+                        segments-radial="6"
+                        color="#3d2616"
+                        shadow="cast: true"></a-cone>
+              </a-entity>
+
+              <!-- Foliage -->
+              <a-entity>
+                <a-sphere position="0 6 0"
+                          radius="3.2"
+                          segments-width="10"
+                          segments-height="10"
+                          color="${colorSet[0]}"
+                          material="opacity: 0.9; roughness: 1"
+                          shadow="cast: true"></a-sphere>
+
+                <a-sphere position="1 6.5 0"
+                          radius="2.8"
+                          segments-width="10"
+                          segments-height="10"
+                          color="${colorSet[1]}"
+                          material="opacity: 0.85; roughness: 1"
+                          shadow="cast: true"></a-sphere>
+
+                <a-sphere position="-0.5 5.8 0.5"
+                          radius="2.5"
+                          segments-width="10"
+                          segments-height="10"
+                          color="${colorSet[2]}"
+                          material="opacity: 0.8; roughness: 1"
+                          shadow="cast: true"></a-sphere>
+              </a-entity>
+
+              <!-- Falling Leaves -->
+              <a-entity create-leaves></a-entity>
+            `;
+
+            this.el.appendChild(tree);
+          });
+        }
+      });
     </script>
   </head>
   <body>
@@ -64,13 +187,17 @@
       <!-- Environment -->
       <a-sky color="#87CEEB"></a-sky>
 
+      <!-- Base Ground -->
       <a-plane position="0 0 0"
                rotation="-90 0 0"
-               width="50"
-               height="50"
+               width="150"
+               height="150"
                color="#3a7e4f"
                shadow="receive: true"
                material="roughness: 1"></a-plane>
+
+      <!-- Ground Variations -->
+      <a-entity create-ground></a-entity>
 
       <!-- Lighting -->
       <a-light type="ambient" color="#ffffff" intensity="0.5"></a-light>
@@ -80,60 +207,11 @@
                color="#ffffff"
                shadow="cast: true"></a-light>
 
-      <!-- Tree Structure -->
-      <a-entity id="tree" position="0 0 0">
-        <!-- Trunk -->
-        <a-cylinder position="0 2 0"
-                   radius="0.5"
-                   height="4"
-                   color="#5c4033"
-                   shadow="cast: true"
-                   material="roughness: 0.8"></a-cylinder>
-
-        <!-- Main Branches -->
-        <a-entity id="branches" position="0 4 0">
-          <a-cone position="0 2 0"
-                  radius-bottom="3"
-                  radius-top="0.5"
-                  height="4"
-                  segments-radial="6"
-                  color="#3d2616"
-                  shadow="cast: true"></a-cone>
-        </a-entity>
-
-        <!-- Foliage -->
-        <a-entity id="foliage">
-          <a-sphere position="0 6 0"
-                    radius="3.2"
-                    segments-width="10"
-                    segments-height="10"
-                    color="#daa520"
-                    material="opacity: 0.9; roughness: 1"
-                    shadow="cast: true"></a-sphere>
-
-          <a-sphere position="1 6.5 0"
-                    radius="2.8"
-                    segments-width="10"
-                    segments-height="10"
-                    color="#ffa500"
-                    material="opacity: 0.85; roughness: 1"
-                    shadow="cast: true"></a-sphere>
-
-          <a-sphere position="-0.5 5.8 0.5"
-                    radius="2.5"
-                    segments-width="10"
-                    segments-height="10"
-                    color="#8b4513"
-                    material="opacity: 0.8; roughness: 1"
-                    shadow="cast: true"></a-sphere>
-        </a-entity>
-
-        <!-- Falling Leaves -->
-        <a-entity id="leaves" create-leaves></a-entity>
-      </a-entity>
+      <!-- Forest -->
+      <a-entity id="forest" create-forest></a-entity>
 
       <!-- Camera -->
-      <a-entity position="0 2 12">
+      <a-entity position="0 25 50" rotation="-20 0 0">
         <a-camera look-controls wasd-controls></a-camera>
       </a-entity>
     </a-scene>
